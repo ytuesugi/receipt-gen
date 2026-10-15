@@ -9,7 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from receipt_gen.generator import (
     ConfigError,
-    _validate_config,
+    validate_config,
     compute_included_tax,
     generate_receipts,
     load_config,
@@ -120,7 +120,7 @@ class GeneratorTests(unittest.TestCase):
         self.config["issuer"]["tax_rounding"] = "truncate"
 
         with self.assertRaisesRegex(ConfigError, "tax_rounding"):
-            _validate_config(self.config)
+            validate_config(self.config)
 
     def test_rejects_partly_given_tax_amounts_in_one_rate(self):
         self.config["receipts"][0]["items"] = [
@@ -131,7 +131,7 @@ class GeneratorTests(unittest.TestCase):
         ]
 
         with self.assertRaisesRegex(ConfigError, "all set tax_amount or all leave it null"):
-            _validate_config(self.config)
+            validate_config(self.config)
 
     def test_shows_remarks_when_configured(self):
         self.config["receipts"][0]["remarks"] = [
