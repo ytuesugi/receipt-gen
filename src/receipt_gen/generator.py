@@ -5,6 +5,7 @@ import json
 import mimetypes
 import re
 from datetime import datetime
+from decimal import ROUND_CEILING, ROUND_FLOOR, ROUND_HALF_UP, Decimal
 from pathlib import Path
 from typing import Any
 
@@ -22,6 +23,14 @@ TAX_LABELS = {
     "exempt": "免税",
 }
 TAX_FIELDS = ("tax_category", "tax_rate", "tax_amount")
+# Categories whose consumption tax is included in the price and can be computed.
+TAXED_CATEGORIES = {"taxable", "reduced_taxable"}
+TAX_ROUNDING_MODES = {
+    "floor": ROUND_FLOOR,  # 切り捨て
+    "round": ROUND_HALF_UP,  # 四捨五入
+    "ceil": ROUND_CEILING,  # 切り上げ
+}
+DEFAULT_TAX_ROUNDING = "floor"
 FONT_FILE = Path(__file__).with_name("fonts") / "NotoSansJP-Variable.ttf"
 
 
@@ -180,7 +189,13 @@ def render_receipt_html(
         amount_note=receipt.get("amount_note", DEFAULT_AMOUNT_NOTE),
         remarks=receipt.get("remarks", []),
         show_tax=show_tax,
-        tax_summaries=_build_tax_summaries(items) if show_tax else [],
+        tax_summaries=(
+            _build_tax_summaries(
+                items, issuer.get("tax_rounding") or DEFAULT_TAX_ROUNDING
+            )
+            if show_tax
+            else []
+        ),
         stamp_data_uri=stamp_data_uri,
         font_uri=FONT_FILE.resolve().as_uri(),
     )
@@ -197,7 +212,16 @@ def _prepare_item(item: dict[str, Any]) -> dict[str, Any]:
     return prepared
 
 
-def _build_tax_summaries(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def _build_tax_summaries(
+    items: list[dict[str, Any]], rounding: str = DEFAULT_TAX_ROUNDING
+) -> list[dict[str, Any]]:
+    """Total the amounts and consumption tax per tax category and rate.
+
+    Prices are tax-inclusive. When every item in a group has tax_amount set,
+    those amounts are added up. When none has, the tax is computed once for
+    the group as amount * rate / (100 + rate) and rounded with the given
+    mode, as required for qualified invoices (one rounding per tax rate).
+    """
     grouped: dict[tuple[str | None, float | None], dict[str, Any]] = {}
     for item in items:
         category = item.get("tax_category")
@@ -210,23 +234,36 @@ def _build_tax_summaries(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
             key,
             {
                 "label": item["tax_label"] or "税区分未設定",
+                "category": category,
+                "rate": rate,
                 "amount": 0,
-                "tax_amount": 0,
-                "tax_amount_complete": True,
+                "given_tax_amounts": [],
             },
         )
         entry["amount"] += item["quantity"] * item["unit_price"]
-        if item.get("tax_amount") is None:
-            entry["tax_amount_complete"] = False
-        else:
-            entry["tax_amount"] += item["tax_amount"]
+        if item.get("tax_amount") is not None:
+            entry["given_tax_amounts"].append(item["tax_amount"])
 
     summaries = []
     for entry in grouped.values():
-        if not entry.pop("tax_amount_complete"):
+        given = entry.pop("given_tax_amounts")
+        category = entry.pop("category")
+        rate = entry.pop("rate")
+        if given:
+            entry["tax_amount"] = sum(given)
+        elif category in TAXED_CATEGORIES and rate is not None:
+            entry["tax_amount"] = compute_included_tax(entry["amount"], rate, rounding)
+        else:
             entry["tax_amount"] = None
         summaries.append(entry)
     return summaries
+
+
+def compute_included_tax(amount: int, rate: float, rounding: str) -> int:
+    """Return the consumption tax included in a tax-inclusive amount."""
+    rate_decimal = Decimal(str(rate))
+    tax = Decimal(amount) * rate_decimal / (Decimal(100) + rate_decimal)
+    return int(tax.to_integral_value(rounding=TAX_ROUNDING_MODES[rounding]))
 
 
 def _load_stamp(stamp_file: str | None, config_dir: Path) -> str | None:
@@ -257,6 +294,10 @@ def validate_config(config: Any) -> None:
     for field in ("email", "invoice_registration_number"):
         if issuer.get(field) is not None and not _is_nonempty_string(issuer[field]):
             raise ConfigError(f"issuer.{field} must be a non-empty string or null.")
+    rounding = issuer.get("tax_rounding")
+    if rounding is not None and rounding not in TAX_ROUNDING_MODES:
+        choices = ", ".join(TAX_ROUNDING_MODES)
+        raise ConfigError(f"issuer.tax_rounding must be one of: {choices}, or null.")
     if issuer.get("stamp_file") is not None and not _is_nonempty_string(
         issuer.get("stamp_file")
     ):
@@ -313,6 +354,19 @@ def validate_receipt(receipt: Any, label: str) -> None:
 
     for item_index, item in enumerate(items, start=1):
         _validate_item(item, f"{label}.items[{item_index}]")
+
+    # Tax is rounded once per category and rate, so a group must either give
+    # every tax_amount or leave all of them to be computed.
+    groups: dict[tuple[Any, Any], set[bool]] = {}
+    for item in items:
+        key = (item.get("tax_category"), item.get("tax_rate"))
+        groups.setdefault(key, set()).add(item.get("tax_amount") is None)
+    for (category, rate), states in groups.items():
+        if category is not None and len(states) > 1:
+            raise ConfigError(
+                f"{label}: items with tax_category {category!r} and tax_rate {rate!r} "
+                "must either all set tax_amount or all leave it null."
+            )
 
 
 def _validate_item(item: Any, label: str) -> None:

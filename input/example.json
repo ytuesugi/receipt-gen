@@ -3,6 +3,7 @@
     "name": "第1回テスト研究会",
     "email": "test@example.com",
     "invoice_registration_number": null,
+    "tax_rounding": "floor",
     "stamp_file": "../assets/sample-stamp.png"
   },
   "receipts": [
@@ -20,7 +21,7 @@
           "unit_price": 31000,
           "tax_category": "taxable",
           "tax_rate": 10,
-          "tax_amount": 2818
+          "tax_amount": null
         },
         {
           "name": "資料代",
@@ -28,7 +29,7 @@
           "unit_price": 1000,
           "tax_category": "taxable",
           "tax_rate": 10,
-          "tax_amount": 182
+          "tax_amount": null
         }
       ]
     },
