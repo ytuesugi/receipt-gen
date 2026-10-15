@@ -1,0 +1,25 @@
+{
+  "issuer": {
+    "name": "サンプルイベント事務局",
+    "email": "contact@example.com",
+    "stamp_file": null
+  },
+  "receipts": [
+    {
+      "file_id": "receipt-001",
+      "name": "山田 太郎 様",
+      "issue_date": "2026-07-11",
+      "amount_note": "但し、イベント参加費として上記正に領収いたしました。",
+      "remarks": [
+        "本ファイルは使い方を示すためのサンプルです。"
+      ],
+      "items": [
+        {
+          "name": "参加費",
+          "quantity": 1,
+          "unit_price": 31000
+        }
+      ]
+    }
+  ]
+}
