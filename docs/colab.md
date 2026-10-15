@@ -4,8 +4,8 @@ Google Spreadsheet を読み、領収書 PDF を Google Drive へ保存します
 
 ## Open
 
-1. [`receipt_gen_colab.ipynb`](../notebooks/receipt_gen_colab.ipynb)をダウンロードします。
-2. [Google Drive](https://drive.google.com/)を開きます。
+1. [`receipt_gen_colab.ipynb`](../notebooks/receipt_gen_colab.ipynb) をダウンロードします。
+2. [Google Drive](https://drive.google.com/) を開きます。
 3. 作業フォルダを作成し、Notebook をアップロードします。
 4. アップロードした Notebook を Google Colaboratory で開きます。
 
