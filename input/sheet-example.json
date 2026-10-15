@@ -1,11 +1,4 @@
 {
-  "_comment": {
-    "source": "読み込むシート。type は csv / xlsx / google_sheets。path は この JSON から見た相対パス",
-    "include_if": "この列の値が in に含まれる行だけ領収書を作る。不要なら省略",
-    "receipt": "1 行 = 1 枚の領収書。値を直接書くか、{\"column\": \"列名\"} で列を指定",
-    "items": "明細。quantity が 0 または空欄の項目は載せない。unit_price は値でも列でもよい",
-    "詳しくは": "docs/spreadsheet.md"
-  },
   "issuer": {
     "name": "第1回テスト研究会",
     "email": "test@example.com",

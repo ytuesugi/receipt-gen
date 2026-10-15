@@ -2,7 +2,7 @@
 
 研究会向けの領収書 PDF（Portable Document Format）を生成します。入力は次の 2 通りです。
 
-- **JSON（JavaScript Object Notation）ファイル**：領収書の内容をすべて JSON に書く方法です。
+- **JSON ファイル**：領収書の内容をすべて JSON に書く方法です。
 - **スプレッドシート**：参加者名簿（Google スプレッドシート、XLSX、CSV（Comma-Separated Values））の 1 行を 1 枚の領収書にする方法です。どの列に何が入っているかは、対応関係を書いた JSON（mapping）で指定します。シート側の形式を変える必要はありません。
 
 ## Quick start

@@ -1,28 +1,34 @@
 # Google Colab で生成する
 
-[`notebooks/receipt_gen_colab.ipynb`](../notebooks/receipt_gen_colab.ipynb) を使うと、Google スプレッドシートを直接読み、PDF を Google Drive に保存できます。Google Cloud のプロジェクトや API（Application Programming Interface）キーの作成は不要で、自分の Google アカウントでログインするだけです。WeasyPrint のインストールもノートブックが行います。
+Google スプレッドシートを読み、領収書 PDF を Google Drive に保存します。Google Cloud の設定や API キーは不要です。
+
+## 準備
+
+次のファイルをダウンロードします。
+
+- [`receipt_gen_colab.ipynb`](../notebooks/receipt_gen_colab.ipynb)
 
 ## 開き方
 
-次のどちらかで開きます。
-
-- GitHub から：Colab の「ファイル → ノートブックを開く → GitHub」で `ytuesugi/receipt-gen` を指定します（非公開リポジトリの場合は「プライベート リポジトリを含める」にチェック）。
-- Drive から：`.ipynb` を Drive にアップロードし、ダブルクリックして「Google Colaboratory」で開きます。
+1. [Google Drive](https://drive.google.com/)を開きます。
+2. 作業フォルダを作成し、`receipt_gen_colab.ipynb` をアップロードします。
+3. アップロードしたファイルを「Google Colaboratory」で開きます。
 
 ## 手順
 
-1. **設定**：`SPREADSHEET_URL`、`WORKSHEET`（タブ名）、`DRIVE_DIR`（作業フォルダ）を書き換えます。
-2. **Drive のマウントとインストール**：receipt-gen のコードを取得し、依存パッケージをインストールします。
-   - `CODE_SOURCE = "github"`：GitHub から clone します。非公開リポジトリの場合は、Colab の「シークレット」（左の鍵アイコン）に `GITHUB_TOKEN` として、読み取り権限のある GitHub の Personal Access Token を登録します。
-   - `CODE_SOURCE = "drive"`：リポジトリのフォルダを Drive にコピーしておき、`CODE_DIR_IN_DRIVE` で指定します。
-3. **ログイン**：スプレッドシートを読むための許可を求められるので、許可します。
-4. **mapping.json の準備**：初回はサンプルから `DRIVE_DIR/mapping.json` を作ります。表示されたシートの見出しに合わせて編集します（左のファイル欄でダブルクリックすると編集できます）。書き方は [spreadsheet.md](spreadsheet.md) を参照してください。
-5. **プレビュー**：宛名・明細・合計を表で確認します。mapping を直したら、このセルだけ再実行します。
-6. **生成**：`DRIVE_DIR/output/日時/` に PDF を保存します。
-7. **ZIP でダウンロード**（任意）
+1. **設定**：`SPREADSHEET_URL`、`WORKSHEET`（タブ名）、`DRIVE_DIR`（上で作成した作業フォルダのパス）を書き換えます。
+2. **準備**：Drive をマウントします。`DRIVE_DIR/code/` にコード一式を取得し、必要なパッケージをインストールします。
+3. **ログイン**：スプレッドシートを読むため、Google アカウントでログインします。
+4. **mapping の作成**：テンプレートから `DRIVE_DIR/mapping.json` を自動作成します。
+5. **mapping の編集**：左のファイル欄から `mapping.json` を開き、シートの見出しや金額に合わせて編集します。書き方は [spreadsheet.md](spreadsheet.md) を参照してください。
+6. **プレビュー**：宛名・明細・合計を確認します。mapping を直した場合は、このセルを再実行します。
+7. **生成**：`DRIVE_DIR/output/日時/` に PDF を保存します。
+8. **ZIP でダウンロード**（任意）
 
 ## 補足
 
+- `DRIVE_DIR` の例：`/content/drive/MyDrive/share/2026-10-16_receipt-gen`
+- 作業フォルダには `code/`、`mapping.json`、印影画像、`output/` がまとまります。
+- 2回目以降は Drive に保存済みのコードと `mapping.json` を使用します。
 - 印影画像は `DRIVE_DIR` に置き、`issuer.stamp_file` にファイル名（例：`"stamp.png"`）を書きます。
-- ノートブックでは、mapping の `source` にかかわらず、`SPREADSHEET_URL` と `WORKSHEET` のシートを読みます。
 - 出力した PDF と mapping には個人情報が含まれます。Drive の共有設定に注意してください。
