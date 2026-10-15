@@ -2,7 +2,14 @@
     font-family: "Receipt Noto Sans JP";
     src: url("{{ font_uri }}") format("truetype");
     font-style: normal;
-    font-weight: 100 900;
+    font-weight: 400;
+}
+
+@font-face {
+    font-family: "Receipt Noto Sans JP";
+    src: url("{{ font_uri }}") format("truetype");
+    font-style: normal;
+    font-weight: 700;
 }
 
 @page {
