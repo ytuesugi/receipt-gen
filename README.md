@@ -51,9 +51,9 @@ PDF は `output/YYYYMMDDThhmmss/` に保存されます。`--dry-run` を付け�
 
 入力方法を選び、リンク先の手順に従ってください。
 
-- JSON から生成する：[手順](docs/json-input.md)
-- CSV / XLSX から生成する：[手順](docs/spreadsheet.md)
-- Google Spreadsheet から生成する（Google Colab）：[手順](docs/colab.md)
+- JSON から生成する：[`docs/json-input.md`](docs/json-input.md)
+- CSV / XLSX から生成する：[`docs/spreadsheet.md`](docs/spreadsheet.md)
+- Google Spreadsheet から生成する（Google Colab）：[`docs/colab.md`](docs/colab.md)
 
 税区分と消費税額については [`docs/tax.md`](docs/tax.md) を参照してください。
 
