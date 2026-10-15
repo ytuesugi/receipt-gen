@@ -69,7 +69,10 @@ Copy-Item input\example.json input\receipts.json
 
 - `items[].tax_category`: 税区分
 - `items[].tax_rate`: 税率（例: `10`）
-- `items[].tax_amount`: 税額
+- `items[].tax_amount`: 税額。`null` なら自動計算
+- `issuer.tax_rounding`: 自動計算の端数処理。`floor`（切り捨て、既定）、`round`（四捨五入）、`ceil`（切り上げ）
+
+単価は税込とみなします。`tax_amount` が `null` の場合、領収書ごと・税区分と税率ごとに金額を合計し、`合計 × 税率 / (100 + 税率)` を 1 回だけ端数処理して消費税額を求めます（適格請求書では、端数処理は税率ごとに 1 回とされています）。自動計算するのは `taxable` と `reduced_taxable` で、`tax_rate` があるときだけです。同じ税区分・税率の明細では、`tax_amount` をすべて指定するか、すべて `null` にしてください。
 
 `tax_category` は `taxable`（課税）、`reduced_taxable`（軽減税率）、`non_taxable`（非課税）、`out_of_scope`（不課税）、`exempt`（免税）から選びます。
 
