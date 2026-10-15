@@ -34,12 +34,6 @@ DATE_FORMATS = ("%Y-%m-%d", "%Y/%m/%d", "%Y.%m.%d", "%Y年%m月%d日")
 TRUE_STRINGS = {"TRUE", "YES", "Y", "✓", "○", "〇"}
 FALSE_STRINGS = {"FALSE", "NO", "N", "×", "-"}
 TAX_CATEGORY_BY_LABEL = {label: key for key, label in TAX_LABELS.items()}
-GOOGLE_SCOPES = (
-    "https://www.googleapis.com/auth/spreadsheets.readonly",
-    "https://www.googleapis.com/auth/drive.readonly",
-)
-
-
 @dataclass
 class Table:
     """Spreadsheet values below the header row.
@@ -114,32 +108,6 @@ def load_table(
     return _make_table(values, source.get("header_row", 1))
 
 
-def google_client() -> Any:
-    """Create a gspread client from Application Default Credentials.
-
-    In Google Colab, call google.colab.auth.authenticate_user() first.
-    """
-    try:
-        import google.auth
-        import gspread
-    except ImportError as error:
-        raise RuntimeError(
-            "Reading Google Sheets requires gspread and google-auth. "
-            "Use the Colab notebook (docs/colab.md), or export the sheet as "
-            "CSV/XLSX and pass it with --source."
-        ) from error
-
-    try:
-        credentials, _ = google.auth.default(scopes=list(GOOGLE_SCOPES))
-    except google.auth.exceptions.DefaultCredentialsError as error:
-        raise RuntimeError(
-            "No Google credentials found. In Colab, run "
-            "google.colab.auth.authenticate_user() first. Locally, export the "
-            "sheet as CSV/XLSX and pass it with --source."
-        ) from error
-    return gspread.authorize(credentials)
-
-
 def _source_path(source: dict[str, Any], base_dir: Path) -> Path:
     return (base_dir / Path(source["path"]).expanduser()).resolve()
 
@@ -187,7 +155,9 @@ def _read_google_sheet(
     url: str, worksheet: str | None, client: Any
 ) -> list[list[Any]]:
     if client is None:
-        client = google_client()
+        raise RuntimeError(
+            "Reading Google Spreadsheet directly is supported in the Colab notebook."
+        )
 
     try:
         if url.startswith(("http://", "https://")):

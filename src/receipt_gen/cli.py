@@ -28,8 +28,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--source",
         help=(
-            "Mapping JSON only: read this CSV/XLSX file or Google Sheets URL "
-            "instead of the source written in the mapping"
+            "Mapping JSON only: read this CSV/XLSX file instead of the source "
+            "written in the mapping"
         ),
     )
     parser.add_argument(
@@ -63,8 +63,12 @@ def main(argv: list[str] | None = None) -> int:
         config_path = args.config.expanduser().resolve()
         data = load_json(config_path)
         if is_mapping(data):
+            if args.source and args.source.startswith(("http://", "https://")):
+                parser.error("Google Spreadsheet URLs are supported only in Colab.")
             result = build_config_from_mapping(
-                config_path, source_override=args.source, worksheet=args.worksheet
+                config_path,
+                source_override=args.source,
+                worksheet=args.worksheet,
             )
             config, base_dir = result.config, result.base_dir
             for note in result.skipped:

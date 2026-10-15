@@ -284,6 +284,17 @@ class SourceTests(unittest.TestCase):
         self.assertEqual(opened, {"url": url, "worksheet": "フォームの回答 1"})
         self.assertEqual(result.config["receipts"][0]["items"][1]["unit_price"], 5000)
 
+    def test_cli_rejects_google_spreadsheet_url(self):
+        with self.assertRaises(SystemExit):
+            main(
+                [
+                    str(self.mapping_path),
+                    "--source",
+                    "https://docs.google.com/spreadsheets/d/abc/edit",
+                    "--dry-run",
+                ]
+            )
+
     def test_generates_pdf_from_csv(self):
         self.write_csv()
         result = build_config_from_mapping(self.mapping_path)
