@@ -1,10 +1,17 @@
+@font-face {
+    font-family: "Receipt Noto Sans JP";
+    src: url("{{ font_uri }}") format("truetype");
+    font-style: normal;
+    font-weight: 100 900;
+}
+
 @page {
     size: A4;
     margin: 20mm;
 }
 
 body {
-    font-family: "Hiragino Sans", "Yu Gothic", "Noto Sans CJK JP", sans-serif;
+    font-family: "Receipt Noto Sans JP";
     font-size: 12pt;
     line-height: 1.8;
 }
@@ -63,18 +70,38 @@ body {
     text-align: center;
 }
 
-.items th:nth-child(1),
-.items td:nth-child(1) {
+.items:not(.with-tax) th:nth-child(1),
+.items:not(.with-tax) td:nth-child(1) {
     width: 400px;
 }
 
-.items th:nth-child(2),
-.items td:nth-child(2) {
+.items:not(.with-tax) th:nth-child(2),
+.items:not(.with-tax) td:nth-child(2) {
     width: 50px;
 }
 
-.items th:nth-child(3),
-.items td:nth-child(3) {
+.items:not(.with-tax) th:nth-child(3),
+.items:not(.with-tax) td:nth-child(3) {
+    width: 100px;
+}
+
+.items.with-tax th:nth-child(1),
+.items.with-tax td:nth-child(1) {
+    width: 280px;
+}
+
+.items.with-tax th:nth-child(2),
+.items.with-tax td:nth-child(2) {
+    width: 50px;
+}
+
+.items.with-tax th:nth-child(3),
+.items.with-tax td:nth-child(3) {
+    width: 120px;
+}
+
+.items.with-tax th:nth-child(4),
+.items.with-tax td:nth-child(4) {
     width: 100px;
 }
 
@@ -84,6 +111,14 @@ body {
 
 .center {
     text-align: center;
+}
+
+.tax-summary {
+    width: 550px;
+    margin: 0 auto 20px;
+    text-align: right;
+    font-size: 9pt;
+    line-height: 1.5;
 }
 
 .remarks {
@@ -108,7 +143,7 @@ body {
     position: absolute;
     z-index: 1;
     top: -20px;
-    left: 220px;
+    left: 120px;
     width: 90px;
     opacity: 0.95;
 }
@@ -118,6 +153,7 @@ body {
     z-index: 2;
 }
 
+.registration-number,
 .email {
     font-size: 10pt;
 }

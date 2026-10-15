@@ -7,10 +7,11 @@ build/
 dist/
 
 # Keep personal receipt data and generated files out of Git.
-config.json
+input/*.json
+!input/example.json
 output/
 
 # Stamp images may contain identifying information.
 assets/*
-!assets/.gitkeep
 !assets/README.md
+!assets/sample-stamp.png

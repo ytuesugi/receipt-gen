@@ -1,17 +1,10 @@
 # 印影画像
 
-印影を表示する場合は、このフォルダに PNG または JPEG 画像を置きます。例:
+`sample-stamp.png` は動作確認用です。実際の領収書では、自分の PNG または JPEG 画像に置き換えてください。
 
-```text
-assets/stamp.png
-```
+## サンプル画像
 
-その後、`config.json` の発行者設定を次のようにします。
+- Created with: [マッハーツール 電子印鑑・署名メーカー](https://www.mach-tools.net/business/signaturestamp/)
+- Provided for this repository as a test stamp.
 
-```json
-"stamp_file": "assets/stamp.png"
-```
-
-印影が不要な場合は `null` のままにしてください。
-
-このフォルダ内の画像は、個人情報を誤って公開しないよう `.gitignore` で除外されています。
+追加した印影画像は `.gitignore` で除外されます。

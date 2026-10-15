@@ -9,19 +9,19 @@ from .generator import ConfigError, generate_receipts
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="JSON の設定から領収書 PDF を生成します。"
+        description="Generate receipt PDFs from a JSON configuration file."
     )
-    parser.add_argument("config", type=Path, help="設定 JSON ファイル")
+    parser.add_argument("config", type=Path, help="Path to the JSON configuration file")
     parser.add_argument(
         "--output-dir",
         type=Path,
         default=Path("output"),
-        help="出力先の親フォルダ（既定: output）",
+        help="Parent output directory (default: output)",
     )
     parser.add_argument(
         "--no-timestamp",
         action="store_true",
-        help="出力先に日時フォルダを作成しない",
+        help="Write directly to the output directory",
     )
     return parser
 
@@ -36,10 +36,10 @@ def main(argv: list[str] | None = None) -> int:
             timestamped=not args.no_timestamp,
         )
     except (ConfigError, OSError, RuntimeError) as error:
-        print(f"エラー: {error}", file=sys.stderr)
+        print(f"Error: {error}", file=sys.stderr)
         return 1
 
-    print(f"{len(output_files)} 件の領収書を生成しました。")
+    print(f"Generated {len(output_files)} receipt(s):")
     for output_file in output_files:
         print(output_file)
     return 0

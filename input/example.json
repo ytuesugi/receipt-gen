@@ -1,0 +1,58 @@
+{
+  "issuer": {
+    "name": "第1回テスト研究会",
+    "email": "test@example.com",
+    "invoice_registration_number": null,
+    "stamp_file": "../assets/sample-stamp.png"
+  },
+  "receipts": [
+    {
+      "file_id": null,
+      "name": "テスト 太郎 様",
+      "issue_date": "2000-01-01",
+      "amount_note": "但し、研究会参加費及び資料代として上記正に領収いたしました。",
+      "remarks": [
+        "本会はインボイス制度における適格請求書発行事業者の登録を受けておりません。"
+      ],
+      "items": [
+        {
+          "name": "研究会参加費",
+          "unit_price": 31000,
+          "tax_category": "taxable",
+          "tax_rate": 10,
+          "tax_amount": 2818
+        },
+        {
+          "name": "資料代",
+          "quantity": 2,
+          "unit_price": 1000,
+          "tax_category": "taxable",
+          "tax_rate": 10,
+          "tax_amount": 182
+        }
+      ]
+    },
+    {
+      "file_id": null,
+      "name": "サンプル 花子 様",
+      "issue_date": "2000-01-01",
+      "amount_note": "但し、研究会参加費及び懇親会費として上記正に領収いたしました。",
+      "items": [
+        {
+          "name": "研究会参加費",
+          "unit_price": 20000,
+          "tax_category": null,
+          "tax_rate": null,
+          "tax_amount": null
+        },
+        {
+          "name": "懇親会費",
+          "unit_price": 5000,
+          "tax_category": null,
+          "tax_rate": null,
+          "tax_amount": null
+        }
+      ]
+    }
+  ]
+}

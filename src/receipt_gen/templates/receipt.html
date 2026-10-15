@@ -8,52 +8,61 @@
 </head>
 <body>
   <div class="title">領収書</div>
-
   <div class="date">{{ issue_date }}</div>
-
   <div class="name">{{ receipt["name"] }}</div>
-
   <div class="amount-box">金額 ¥{{ total | yen }}-</div>
+  <div class="note">{{ amount_note }}</div>
 
-  <div class="note">{{ receipt["amount_note"] }}</div>
-
-  <table class="items">
+  <table class="items{% if show_tax %} with-tax{% endif %}">
     <thead>
       <tr>
         <th>項目</th>
         <th>数量</th>
+        {% if show_tax %}<th>税区分</th>{% endif %}
         <th>金額</th>
       </tr>
     </thead>
     <tbody>
-      {% for item in receipt["items"] %}
+      {% for item in items %}
       <tr>
         <td>{{ item["name"] }}</td>
         <td class="center">{{ item["quantity"] }}</td>
+        {% if show_tax %}<td class="center">{{ item["tax_label"] }}</td>{% endif %}
         <td class="right">¥{{ (item["quantity"] * item["unit_price"]) | yen }}</td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
 
-  {% if receipt["remarks"] %}
-  <div class="remarks">
-    {% for remark in receipt["remarks"] %}
-    <div>{{ remark }}</div>
+  {% if tax_summaries %}
+  <div class="tax-summary">
+    {% for summary in tax_summaries %}
+    <div>
+      {{ summary["label"] }} 対象額 ¥{{ summary["amount"] | yen }}
+      {% if summary["tax_amount"] is not none %}
+      （消費税額 ¥{{ summary["tax_amount"] | yen }}）
+      {% endif %}
+    </div>
     {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if remarks %}
+  <div class="remarks">
+    {% for remark in remarks %}<div>{{ remark }}</div>{% endfor %}
   </div>
   {% endif %}
 
   <div class="footer">
     <div class="issuer-area">
-      {% if stamp_data_uri %}
-      <img class="stamp" src="{{ stamp_data_uri }}" alt="">
-      {% endif %}
+      {% if stamp_data_uri %}<img class="stamp" src="{{ stamp_data_uri }}" alt="">{% endif %}
       <div class="issuer-name">{{ issuer["name"] }}</div>
     </div>
-    {% if issuer["email"] %}
-    <div class="email">{{ issuer["email"] }}</div>
+    <br>
+    {% if issuer["invoice_registration_number"] %}
+    <div class="registration-number">登録番号 {{ issuer["invoice_registration_number"] }}</div>
     {% endif %}
+    {% if issuer["email"] %}<div class="email">{{ issuer["email"] }}</div>{% endif %}
   </div>
 </body>
 </html>

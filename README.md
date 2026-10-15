@@ -1,98 +1,93 @@
 # receipt-gen
 
-JSON に入力した内容から、日本語の領収書 PDF を一括生成する小さな Python ツールです。
+研究会向けの領収書 PDF を、`input/` の JSON から生成します。
 
-Google Colab や Google Drive は使いません。データはローカルで処理され、領収書ごとの金額は `数量 × 単価` から自動計算されます。印影画像は任意です。
+## Setup
 
-## 必要なもの
+Python 3.10 以上を使用します。
 
-- macOS
-- Python 3.10 以上
-
-## セットアップ
-
-ターミナルでこのフォルダに移動し、次を実行します。
+### macOS
 
 ```bash
+brew install weasyprint
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -e .
+python -m pip install -r requirements.txt
 ```
 
-WeasyPrint のインストール時または実行時に共有ライブラリのエラーが出る場合は、Homebrew を導入したうえで次を実行し、もう一度インストールしてください。
+### Windows
+
+WeasyPrint の公式手順に従い、[MSYS2](https://www.msys2.org/) をインストールします。MSYS2 UCRT64 で次を実行します。
 
 ```bash
-brew install pango libffi
+pacman -S mingw-w64-ucrt-x86_64-pango
 ```
 
-## 使い方
+続いて PowerShell で実行します。
 
-1. サンプル設定を、Git 管理されない作業用ファイルにコピーします。
+```powershell
+py -m venv .venv
+.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+```
 
-   ```bash
-   cp config.example.json config.json
-   ```
+詳細は [WeasyPrint公式インストール手順](https://doc.courtbouillon.org/weasyprint/stable/first_steps.html#windows)を参照してください。
 
-2. `config.json` を編集します。`receipts` に複数の領収書を並べると、一度に生成できます。
-3. PDF を生成します。
+## Input
 
-   ```bash
-   receipt-gen config.json
-   ```
-
-PDF は `output/20260711T120000/receipt-001.pdf` のような日時付きフォルダに作成されます。保存先を変える場合は次のようにします。
+サンプルをコピーして編集します。
 
 ```bash
-receipt-gen config.json --output-dir ~/Desktop/receipts
+cp input/example.json input/receipts.json
 ```
 
-日時フォルダを作らず、指定先へ直接出力することもできます。
+Windowsでは次のコマンドを使用します。
+
+```powershell
+Copy-Item input\example.json input\receipts.json
+```
+
+### Fields
+
+- `issuer.name`: 発行者名
+- `issuer.email`: メールアドレス。不要なら `null`
+- `issuer.invoice_registration_number`: インボイス登録番号。未登録なら `null`
+- `issuer.stamp_file`: 印影画像のパス。不要なら `null`
+- `receipts[].file_id`: PDFのファイル名。`null` なら自動生成
+- `receipts[].name`: 宛名
+- `receipts[].issue_date`: 発行日（`YYYY-MM-DD`）
+- `receipts[].amount_note`: 但し書き。省略可能
+- `receipts[].remarks`: 備考の配列。省略または空の配列で非表示
+- `receipts[].items`: 明細の配列
+- `items[].name`: 項目名
+- `items[].quantity`: 数量。省略時は `1`
+- `items[].unit_price`: 単価
+
+### Tax
+
+税関連項目をすべて `null` または省略すると、税区分と税内訳は表示されません。適格請求書として使う場合は、[国税庁「適格請求書等の記載事項」](https://www.nta.go.jp/taxes/shiraberu/taxanswer/shohi/6625.htm)を確認してください。
+
+- `items[].tax_category`: 税区分
+- `items[].tax_rate`: 税率（例: `10`）
+- `items[].tax_amount`: 税額
+
+`tax_category` は `taxable`（課税）、`reduced_taxable`（軽減税率）、`non_taxable`（非課税）、`out_of_scope`（不課税）、`exempt`（免税）から選びます。
+
+「非課税」と「不課税」は異なります。税区分は取引内容によって判断し、[国税庁「非課税と不課税の違い」](https://www.nta.go.jp/taxes/shiraberu/taxanswer/shohi/6209.htm)も確認してください。
+
+## Run
 
 ```bash
-receipt-gen config.json --output-dir output --no-timestamp
+python generate.py input/receipts.json
 ```
 
-インストールせずに実行したい場合は、仮想環境で依存パッケージを入れた後、次のコマンドも使えます。
+PDF は `output/YYYYMMDDThhmmss/` に保存されます。
 
-```bash
-PYTHONPATH=src python -m receipt_gen config.json
-```
+## Font
 
-## 設定ファイル
+`Noto Sans JP` をプロジェクト内に同梱し、PDFへ埋め込みます。OSへのフォントインストールは不要です。フォントとライセンスは `src/receipt_gen/fonts/` にあります。
 
-`config.example.json` が安全なサンプルです。
-
-- `issuer`: 発行者名、メールアドレス、任意の印影画像
-- `receipts`: 生成する領収書の一覧
-- `file_id`: PDF のファイル名（英数字、`.`、`_`、`-` が使用可能）
-- `issue_date`: 発行日（`YYYY-MM-DD`）
-- `items`: 項目、数量、単価（円）の一覧
-- `remarks`: 備考の一覧。不要なら空配列にできます
-
-金額は整数の円として扱います。合計額は各項目の `quantity * unit_price` の合計です。
-
-## 印影画像を使う
-
-印影なしでも生成できます。使う場合は PNG または JPEG を `assets/stamp.png` などの名前で配置し、`config.json` の `stamp_file` を設定します。
-
-```json
-"stamp_file": "assets/stamp.png"
-```
-
-パスは `config.json` があるフォルダを基準に解決されます。画像が設定されているのに見つからない場合は、PDF を生成せずエラーにします。詳しくは `assets/README.md` を参照してください。
-
-## GitHub で共有する前に
-
-`config.json`、`output/`、`assets/` 内の印影画像は `.gitignore` の対象です。実際の宛名、メールアドレス、領収金額、印影が Git に含まれていないことを、公開前に必ず確認してください。
-
-```bash
-git status
-```
-
-サンプルを変更する場合も、実在する個人や非公開の連絡先は使わないでください。
-
-## テスト
+## Test
 
 ```bash
 python -m unittest discover -s tests
