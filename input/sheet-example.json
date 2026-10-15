@@ -1,0 +1,35 @@
+{
+  "_comment": {
+    "source": "読み込むシート。type は csv / xlsx / google_sheets。path は この JSON から見た相対パス",
+    "include_if": "この列の値が in に含まれる行だけ領収書を作る。不要なら省略",
+    "receipt": "1 行 = 1 枚の領収書。値を直接書くか、{\"column\": \"列名\"} で列を指定",
+    "items": "明細。quantity が 0 または空欄の項目は載せない。unit_price は値でも列でもよい",
+    "詳しくは": "docs/spreadsheet.md"
+  },
+  "issuer": {
+    "name": "第1回テスト研究会",
+    "email": "test@example.com",
+    "invoice_registration_number": null,
+    "stamp_file": "../assets/sample-stamp.png"
+  },
+  "source": {
+    "type": "csv",
+    "path": "sheet-example.csv",
+    "header_row": 1
+  },
+  "include_if": {"column": "入金", "in": ["済"]},
+  "receipt": {
+    "name": {"column": "氏名", "suffix": " 様"},
+    "issue_date": "2026-07-11",
+    "amount_note": "但し、研究会参加費等として上記正に領収いたしました。",
+    "remarks": [
+      "本会はインボイス制度における適格請求書発行事業者の登録を受けておりません。"
+    ]
+  },
+  "items": [
+    {"name": "研究会参加費（一般）", "quantity": {"column": "一般"}, "unit_price": 31000},
+    {"name": "研究会参加費（学生）", "quantity": {"column": "学生"}, "unit_price": 20000},
+    {"name": "懇親会費", "quantity": {"column": "懇親会"}, "unit_price": {"column": "懇親会費"}},
+    {"name": "資料代", "quantity": {"column": "資料"}, "unit_price": 1000}
+  ]
+}

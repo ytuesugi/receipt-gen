@@ -29,17 +29,21 @@ class ConfigError(ValueError):
     """Raised when the receipt configuration is invalid."""
 
 
-def load_config(config_path: Path) -> dict[str, Any]:
+def load_json(path: Path) -> Any:
+    """Read a JSON file and convert file and syntax errors to ConfigError."""
     try:
-        config = json.loads(config_path.read_text(encoding="utf-8"))
+        return json.loads(Path(path).read_text(encoding="utf-8"))
     except FileNotFoundError as error:
-        raise ConfigError(f"Configuration file not found: {config_path}") from error
+        raise ConfigError(f"Configuration file not found: {path}") from error
     except json.JSONDecodeError as error:
         raise ConfigError(
-            f"Invalid JSON near line {error.lineno}: {error.msg}"
+            f"Invalid JSON in {path} near line {error.lineno}: {error.msg}"
         ) from error
 
-    _validate_config(config)
+
+def load_config(config_path: Path) -> dict[str, Any]:
+    config = load_json(config_path)
+    validate_config(config)
     return config
 
 
@@ -47,12 +51,34 @@ def generate_receipts(
     config_path: Path,
     output_root: Path = Path("output"),
     timestamped: bool = True,
+    show_progress: bool = False,
 ) -> list[Path]:
     config_path = config_path.expanduser().resolve()
     config = load_config(config_path)
-    stamp_data_uri = _load_stamp(
-        config["issuer"].get("stamp_file"), config_path.parent
+    return generate_receipts_from_config(
+        config,
+        base_dir=config_path.parent,
+        output_root=output_root,
+        timestamped=timestamped,
+        show_progress=show_progress,
     )
+
+
+def generate_receipts_from_config(
+    config: dict[str, Any],
+    base_dir: Path,
+    output_root: Path = Path("output"),
+    timestamped: bool = True,
+    show_progress: bool = False,
+) -> list[Path]:
+    """Generate PDFs from a validated configuration.
+
+    Relative paths in the configuration, such as issuer.stamp_file, are
+    resolved against base_dir.
+    """
+    validate_config(config)
+    base_dir = Path(base_dir).expanduser().resolve()
+    stamp_data_uri = _load_stamp(config["issuer"].get("stamp_file"), base_dir)
 
     output_root = output_root.expanduser()
     output_dir = (
@@ -76,17 +102,36 @@ def generate_receipts(
     }
     used_file_ids: set[str] = set()
     output_files: list[Path] = []
-    for index, receipt in enumerate(config["receipts"], start=1):
+    receipts = _progress(
+        config["receipts"], show_progress, description="Generating PDFs"
+    )
+    for index, receipt in enumerate(receipts, start=1):
         html = render_receipt_html(receipt, config["issuer"], stamp_data_uri)
         file_id = receipt.get("file_id") or _automatic_file_id(receipt, index)
         if receipt.get("file_id") is None:
             file_id = _unique_file_id(file_id, used_file_ids | reserved_file_ids)
         used_file_ids.add(file_id)
         output_file = output_dir / f"{file_id}.pdf"
-        HTML(string=html, base_url=str(config_path.parent)).write_pdf(output_file)
+        HTML(string=html, base_url=str(base_dir)).write_pdf(output_file)
         output_files.append(output_file.resolve())
 
     return output_files
+
+
+def receipt_total(receipt: dict[str, Any]) -> int:
+    return sum(
+        item.get("quantity", 1) * item["unit_price"] for item in receipt["items"]
+    )
+
+
+def _progress(iterable, enabled: bool, description: str):
+    if not enabled:
+        return iterable
+    try:
+        from tqdm.auto import tqdm
+    except ImportError:
+        return iterable
+    return tqdm(iterable, desc=description, unit="receipt")
 
 
 def _automatic_file_id(receipt: dict[str, Any], index: int) -> str:
@@ -202,7 +247,7 @@ def _load_stamp(stamp_file: str | None, config_dir: Path) -> str | None:
     return f"data:{mime_type};base64,{encoded}"
 
 
-def _validate_config(config: Any) -> None:
+def validate_config(config: Any) -> None:
     if not isinstance(config, dict):
         raise ConfigError("The configuration root must be an object.")
 
@@ -223,7 +268,7 @@ def _validate_config(config: Any) -> None:
 
     seen_file_ids: set[str] = set()
     for index, receipt in enumerate(receipts, start=1):
-        _validate_receipt(receipt, index)
+        validate_receipt(receipt, f"receipts[{index}]")
         file_id = receipt.get("file_id")
         if file_id is not None:
             if file_id in seen_file_ids:
@@ -231,8 +276,7 @@ def _validate_config(config: Any) -> None:
             seen_file_ids.add(file_id)
 
 
-def _validate_receipt(receipt: Any, index: int) -> None:
-    label = f"receipts[{index}]"
+def validate_receipt(receipt: Any, label: str) -> None:
     if not isinstance(receipt, dict):
         raise ConfigError(f"{label} must be an object.")
 

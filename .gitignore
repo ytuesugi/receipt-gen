@@ -7,8 +7,10 @@ build/
 dist/
 
 # Keep personal receipt data and generated files out of Git.
-input/*.json
+input/*
 !input/example.json
+!input/sheet-example.json
+!input/sheet-example.csv
 output/
 
 # Stamp images may contain identifying information.

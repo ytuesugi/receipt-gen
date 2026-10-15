@@ -1,91 +1,55 @@
 # receipt-gen
 
-研究会向けの領収書 PDF を、`input/` の JSON から生成します。
+研究会向けの領収書 PDF（Portable Document Format）を生成します。入力は次の 2 通りです。
 
-## Setup
+- **JSON（JavaScript Object Notation）ファイル**：領収書の内容をすべて JSON に書く方法です。
+- **スプレッドシート**：参加者名簿（Google スプレッドシート、XLSX、CSV（Comma-Separated Values））の 1 行を 1 枚の領収書にする方法です。どの列に何が入っているかは、対応関係を書いた JSON（mapping）で指定します。シート側の形式を変える必要はありません。
 
-Python 3.10 以上を使用します。
-
-### macOS
-
-```bash
-brew install weasyprint
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install -r requirements.txt
-```
-
-### Windows
-
-WeasyPrint の公式手順に従い、[MSYS2](https://www.msys2.org/) をインストールします。MSYS2 UCRT64 で次を実行します。
+## Quick start
 
 ```bash
-pacman -S mingw-w64-ucrt-x86_64-pango
-```
+python -m pip install -r requirements.txt   # 事前準備は docs/setup.md
 
-続いて PowerShell で実行します。
+# JSON から生成
+python generate.py input/example.json
 
-```powershell
-py -m venv .venv
-.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
-```
-
-詳細は [WeasyPrint公式インストール手順](https://doc.courtbouillon.org/weasyprint/stable/first_steps.html#windows)を参照してください。
-
-## Input
-
-サンプルをコピーして編集します。
-
-```bash
-cp input/example.json input/receipts.json
-```
-
-Windowsでは次のコマンドを使用します。
-
-```powershell
-Copy-Item input\example.json input\receipts.json
-```
-
-### Fields
-
-- `issuer.name`: 発行者名
-- `issuer.email`: メールアドレス。不要なら `null`
-- `issuer.invoice_registration_number`: インボイス登録番号。未登録なら `null`
-- `issuer.stamp_file`: 印影画像のパス。不要なら `null`
-- `receipts[].file_id`: PDFのファイル名。`null` なら自動生成
-- `receipts[].name`: 宛名
-- `receipts[].issue_date`: 発行日（`YYYY-MM-DD`）
-- `receipts[].amount_note`: 但し書き。省略可能
-- `receipts[].remarks`: 備考の配列。省略または空の配列で非表示
-- `receipts[].items`: 明細の配列
-- `items[].name`: 項目名
-- `items[].quantity`: 数量。省略時は `1`
-- `items[].unit_price`: 単価
-
-### Tax
-
-税関連項目をすべて `null` または省略すると、税区分と税内訳は表示されません。適格請求書として使う場合は、[国税庁「適格請求書等の記載事項」](https://www.nta.go.jp/taxes/shiraberu/taxanswer/shohi/6625.htm)を確認してください。
-
-- `items[].tax_category`: 税区分
-- `items[].tax_rate`: 税率（例: `10`）
-- `items[].tax_amount`: 税額
-
-`tax_category` は `taxable`（課税）、`reduced_taxable`（軽減税率）、`non_taxable`（非課税）、`out_of_scope`（不課税）、`exempt`（免税）から選びます。
-
-「非課税」と「不課税」は異なります。税区分は取引内容によって判断し、[国税庁「非課税と不課税の違い」](https://www.nta.go.jp/taxes/shiraberu/taxanswer/shohi/6209.htm)も確認してください。
-
-## Run
-
-```bash
-python generate.py input/receipts.json
+# スプレッドシート（CSV/XLSX）から生成。まず --dry-run で内容を確認
+python generate.py input/sheet-example.json --dry-run
+python generate.py input/sheet-example.json
 ```
 
 PDF は `output/YYYYMMDDThhmmss/` に保存されます。
 
+Google スプレッドシートを直接読む場合は、[Google Colab のノートブック](notebooks/receipt_gen_colab.ipynb)を使います。Google Cloud の設定は不要です。
+
+## Docs
+
+| 内容 | ファイル |
+| --- | --- |
+| インストール（macOS / Windows） | [docs/setup.md](docs/setup.md) |
+| JSON 入力の書き方 | [docs/json-input.md](docs/json-input.md) |
+| スプレッドシート入力と対応関係 JSON の書き方 | [docs/spreadsheet.md](docs/spreadsheet.md) |
+| Google Colab で Google スプレッドシートから生成する | [docs/colab.md](docs/colab.md) |
+| 税区分・インボイスの注意 | [docs/tax.md](docs/tax.md) |
+
+## Command line
+
+```text
+python generate.py CONFIG [--dry-run] [--source PATH_OR_URL] [--worksheet NAME]
+                          [--output-dir DIR] [--no-timestamp]
+```
+
+| オプション | 意味 |
+| --- | --- |
+| `--dry-run` | PDF を作らず、宛名・明細・合計を一覧表示します |
+| `--source` | 対応関係 JSON の `source` の代わりに、指定した CSV/XLSX ファイルまたは Google スプレッドシートの URL を読みます |
+| `--worksheet` | 読み込むシート（タブ）名（XLSX / Google スプレッドシート） |
+| `--output-dir` | 出力先の親フォルダ（既定: `output`） |
+| `--no-timestamp` | 日時フォルダを作らず、出力先に直接保存します |
+
 ## Font
 
-`Noto Sans JP` をプロジェクト内に同梱し、PDFへ埋め込みます。OSへのフォントインストールは不要です。フォントとライセンスは `src/receipt_gen/fonts/` にあります。
+`Noto Sans JP` を同梱し、PDF に埋め込みます。OS へのフォントのインストールは不要です。フォントとライセンスは `src/receipt_gen/fonts/` にあります。
 
 ## Test
 
